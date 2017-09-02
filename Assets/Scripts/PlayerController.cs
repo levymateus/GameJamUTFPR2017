@@ -5,34 +5,24 @@ using UnityEngine;
 public class PlayerController : MonoBehaviour {
 
 	private Rigidbody2D rb;
-
 	private float lastXPoint;
-
 	private float lastYpoint;
+	private bool isJump;
+	private float power;                         //!< forca adicional para o pulo
+	private bool grounded;
+	private bool isDead;
+	private float lastHitTime;
+	private int currentLife;
+    private bool isImmune;
 
 	public LayerMask whatIsGround;
-
-	private bool grounded;
-
-	public int hearts = 3; //!< vidas do jogador
-
-	private bool isDead;
-
-	//private int jumpCount = 0;
-
-	//public int maxJumps;
-
-    // movement
     public float movementSpeed = 3;
-
-    // jump
     public float jumpForce;
-	//public float secondJumpForce = 100;
-    private bool isJump;
-
-	private float power; //!< forca adicional para o pulo
-	public float powerStep = 0.5f; //!< valor que é incrementado p/ aumentar o 'power'
-	public float maxPower = 60; //!< máximo valor de 'power'
+	public float powerStep = 0.5f;              //!< valor que é incrementado p/ aumentar o 'power'
+	public float maxPowerJump = 60;             //!< máximo valor de 'power'
+	public int lives = 3;                       //!< vidas do jogador
+	public float immuneTime;
+    public float chock = 100;                    //!< Força que empurra o jogador quando chocar com o inimigo
 
     void Start()
     {
@@ -41,6 +31,8 @@ public class PlayerController : MonoBehaviour {
 		isDead = false;
 		grounded = true;
 		power = 0;
+		currentLife = lives;
+        isImmune = false;
 		lastXPoint = rb.transform.position.x;
 		lastYpoint = rb.transform.position.y;
     }
@@ -49,69 +41,93 @@ public class PlayerController : MonoBehaviour {
     {
 		if (grounded && isJump) {
 			isJump = false;
-			//Debug.Log ("grounded");
-			/*if(jumpCount <= maxJumps)
-				jumpCount = 0;*/
 		}
 
 		if (!isDead) {
-			Action ();
+			transform.position += new Vector3(Input.GetAxis("Horizontal"), 0, 0) * movementSpeed * Time.deltaTime;
+			grounded = Physics2D.OverlapCircle (transform.position, 0.2f, whatIsGround);
+		
+			if (Input.GetButton ("Jump") && power <= maxPowerJump) {
+				power += powerStep;
+			}
+
+			if (Input.GetButtonUp("Jump") && grounded && !isJump)
+			{
+				float aux = jumpForce;
+				jumpForce += power;
+				rb.AddForce (transform.up * jumpForce);
+				jumpForce = aux;
+				power = 0;
+				isJump = true;
+			}
+
+            if (isImmune && (Time.time - lastHitTime) >= immuneTime )
+            {
+                Debug.Log(Time.time - lastHitTime);
+                isImmune = false;
+            }
+			
 		} else {
-			WaitingComands ();
+			if (Input.GetButton ("Submit")) {
+				ResetPosition ();
+				isDead = false;
+				currentLife = lives;
+			}
 		}
+		
     }
 
 	private void Attack(){
-		if (Physics2D.OverlapCircle (transform.position, 0.2f, whatIsGround).attachedRigidbody.tag == "Enemy") 
-		{
-			Debug.Log("acertou o inimigo");
-		}
+		// TODO: Ataque do jogador . . .
 	}
 
 	public void ResetPosition(){
 		rb.transform.position = new Vector3 (lastXPoint, lastYpoint, 1);
 	}
 
-	// Ações do jogador enquanto vivo
-	private void Action()
-	{
-		transform.position += new Vector3(Input.GetAxis("Horizontal"), 0, 0) * movementSpeed * Time.deltaTime;
-		grounded = Physics2D.OverlapCircle (transform.position, 0.2f, whatIsGround);
+	public void TookDamage(){
+        if (!isImmune)
+        {
+            lastHitTime = Time.time;
+            currentLife--;
+            isImmune = true;
+            Debug.Log("levou dano !");
+        }
 
-		if (Input.GetButton ("Jump") && power <= maxPower) {
-			power += powerStep;
-		}
+        if (currentLife <= 0)
+        {
+            isDead = true;
+            ResetPosition();
+        }
+    }
 
-		if (Input.GetButtonUp("Jump") && grounded && !isJump)
-		{
-			float aux = jumpForce;
-			jumpForce += power;
-			Debug.Log (jumpForce);
-			rb.AddForce (transform.up * jumpForce);
-			jumpForce = aux;
-			power = 0;
-			isJump = true;
-			//jumpCount += 1;
-		}
-		/*else if (jumpCount <= maxJumps && isJump && Input.GetButtonDown("Jump")) {
-			Debug.Log ("isJump");
-			playerRigidBody.AddForce (transform.up * secondJumpForce);
-			jumpCount += 1;
-		}*/
-	}
-
-	private void WaitingComands(){
-		if (Input.GetButtonDown ("Submit")) {
-			ResetPosition ();
+	void OnTriggerEnter2D(Collider2D other){
+		if (other.tag == "Enemy") {
+            MoveEnemy enemy = other.GetComponent<MoveEnemy>();
+            if(enemy != null)
+            {
+                if (enemy.side)
+                {
+                    rb.AddForce(transform.right * -chock);
+                }
+                else
+                {
+                    rb.AddForce(transform.right * chock);
+                }
+            }
+            else
+            {
+                Debug.Log("Nao encontrou o script");
+            }
+            
+            rb.AddForce(transform.up * jumpForce);
+			TookDamage ();
 		}
 	}
 		
 	void OnTriggerExit2D(Collider2D other){
-		if (other.tag == "Boundary") 
-		{
-			Debug.Log ("saiu do limite . . .");
-			isDead = true;
-			Debug.Log ("Morto !!");
+		if (other.tag == "Boundary") {
+			ResetPosition ();
 		}
 	}
 

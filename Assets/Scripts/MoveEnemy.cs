@@ -5,15 +5,11 @@ using UnityEngine;
 public class MoveEnemy : MonoBehaviour {
 
 	private Rigidbody2D rb;
+    public bool side;
 
-	public float movementSpeed = 1;
-
+    public float movementSpeed = 1;
 	public float leftBoundary;
-
 	public float rightBoundary;
-
-	private bool side;
-
 	public float moveWait;
 
 	// Use this for initialization
@@ -24,21 +20,16 @@ public class MoveEnemy : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-		Move ();
-	}
+        if (transform.position.x <= leftBoundary)
+            side = false;
 
-	void Move()
-	{
-		if (transform.position.x <= leftBoundary)
-			side = false;
+        if (transform.position.x >= rightBoundary)
+            side = true;
 
-		if (transform.position.x >= rightBoundary)
-			side = true;
+        if (side)
+            rb.MovePosition(transform.position - transform.right * movementSpeed * Time.deltaTime);
+        else
+            rb.MovePosition(transform.position + transform.right * movementSpeed * Time.deltaTime);
+    }
 
-		if(side)
-			rb.MovePosition (transform.position - transform.right * movementSpeed * Time.deltaTime);
-		else
-			rb.MovePosition (transform.position + transform.right * movementSpeed * Time.deltaTime);
-		
-	}
 }
