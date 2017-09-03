@@ -2,6 +2,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+/**
+ * Esta classe implementa todas as ações do jogador.
+ **/
 public class PlayerController : MonoBehaviour {
 
 	private Rigidbody2D rb;
@@ -22,7 +25,7 @@ public class PlayerController : MonoBehaviour {
 	public float maxPowerJump = 60;             //!< máximo valor de 'power'
 	public int lives = 3;                       //!< vidas do jogador
 	public float immuneTime;
-    public float chock = 100;                    //!< Força que empurra o jogador quando chocar com o inimigo
+    public float repulse = 100;                    //!< Força que empurra o jogador quando chocar com o inimigo
 
     void Start()
     {
@@ -44,16 +47,19 @@ public class PlayerController : MonoBehaviour {
 		}
 
 		if (!isDead) {
-			transform.position += new Vector3(Input.GetAxis("Horizontal"), 0, 0) * movementSpeed * Time.deltaTime;
-			grounded = Physics2D.OverlapCircle (transform.position, 0.2f, whatIsGround);
-		
-			if (Input.GetButton ("Jump") && power <= maxPowerJump) {
-				power += powerStep;
-			}
 
-			if (Input.GetButtonUp("Jump") && grounded && !isJump)
+            transform.position += new Vector3(Input.GetAxis("Horizontal"), 0, 0) * movementSpeed * Time.deltaTime;
+			grounded = Physics2D.OverlapCircle (transform.position, 0.2f, whatIsGround);
+
+            if (Input.GetButton("Jump"))
+            {
+                transform.position = new Vector3(transform.position.x, transform.position.y + powerStep, 1);
+            }
+
+            if (Input.GetButtonDown("Jump") && grounded && !isJump)
 			{
-				float aux = jumpForce;
+
+                float aux = jumpForce;
 				jumpForce += power;
 				rb.AddForce (transform.up * jumpForce);
 				jumpForce = aux;
@@ -103,16 +109,16 @@ public class PlayerController : MonoBehaviour {
 
 	void OnTriggerEnter2D(Collider2D other){
 		if (other.tag == "Enemy") {
-            MoveEnemy enemy = other.GetComponent<MoveEnemy>();
+            Sentinel enemy = other.GetComponent<Sentinel>();
             if(enemy != null)
             {
                 if (enemy.side)
                 {
-                    rb.AddForce(transform.right * -chock);
+                    rb.AddForce(transform.right * -repulse);
                 }
                 else
                 {
-                    rb.AddForce(transform.right * chock);
+                    rb.AddForce(transform.right * repulse);
                 }
             }
             else
@@ -120,7 +126,7 @@ public class PlayerController : MonoBehaviour {
                 Debug.Log("Nao encontrou o script");
             }
             
-            rb.AddForce(transform.up * jumpForce);
+            rb.AddRelativeForce(transform.up * repulse);
 			TookDamage ();
 		}
 	}
