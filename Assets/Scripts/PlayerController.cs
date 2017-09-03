@@ -4,6 +4,8 @@ using UnityEngine;
 
 /**
  * Esta classe implementa todas as ações do jogador.
+ * 
+ * As implementações de funcionalidades específicas também são implementadas aqui.
  **/
 public class PlayerController : MonoBehaviour {
 

@@ -2,6 +2,10 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+/**
+ *  A classe 'CameraController' é responsável por cotrolar a camera que acompanha um objeto.
+ *  Esse objeto geralmente é um jogador, mas permite que seja outro objeto.
+ **/
 public class CameraController : MonoBehaviour {
 
 	// Esse objeto geralmente será uma referencia para o jogador

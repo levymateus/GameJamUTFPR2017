@@ -5,7 +5,9 @@ using UnityEngine;
 
 /**
  * @brief Esta classe movimenta um objeto com uma sentinela em um intervalo 
- * 'leftBoundary' e 'rightBoundary'.
+ * 'leftBoundary' e 'rightBoundary'. 
+ * 
+ * Pode ser usada para movimentar o jogador, blocos de chão, e objetos de fundo dentre outros.
  * 
  **/
 public class Sentinel : MonoBehaviour {
